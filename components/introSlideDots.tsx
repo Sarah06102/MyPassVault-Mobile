@@ -1,14 +1,14 @@
-import { StyleSheet, Text, View, Dimensions, Animated } from 'react-native'
+import { StyleSheet, Text, View, Dimensions } from 'react-native'
 import React from 'react'
 import { SharedValue } from 'react-native-reanimated';
-import { interpolate, useAnimatedStyle, Extrapolate } from 'react-native-reanimated';
+import Animated, { interpolate, useAnimatedStyle, Extrapolate } from 'react-native-reanimated';
 
 
 type IntroSlideDotsProps = {
     data: { id: number; title: string; description?: string }[];
-    scrollX: SharedValue<number>;
+    scrollX: SharedValue<number>; 
     index: number;
-  };
+};
 
 const { width } = Dimensions.get('screen');
 
@@ -29,7 +29,7 @@ const IntroSlideDots: React.FC<IntroSlideDotsProps> = ({data, scrollX, index}) =
                 width,
             };
   });
-            return <Animated.View key= {idx.toString()} style={[styles.dot, animatedStyle]} />;
+            return <Animated.View key= {idx.toString()} style={[styles.dot, index === idx ? styles.dotActive : {}, animatedStyle]} />;
         })}
     </View>
   );
@@ -53,6 +53,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#a9a9a9',
     },
     dotActive: {
-        backgroundColor:'silver',
+        backgroundColor:'#fff5ee',
     }
 })
