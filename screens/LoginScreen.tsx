@@ -1,14 +1,55 @@
 import { Text, View, TouchableOpacity, StyleSheet, TextInput } from 'react-native'
-import React, { Component } from 'react'
+import React, { useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = () => {
-  const navigation = useNavigation();
+    const navigation = useNavigation<any>();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+
+  const handleLogin = async () => {
+    setErrorMessage('');
+    navigation.navigate('Loading');
+    try {
+        const response = await axios.post('https://mypassvault.onrender.com/api/login/', {
+        email: email.toLowerCase(),
+        password: password,
+        });
+
+        console.log('Login success:', response.data);
+        
+        // Save token 
+        const { token } = response.data;
+
+        if (token) {
+            await AsyncStorage.setItem('token', token);
+            navigation.navigate('Dashboard');
+        } else {
+            console.error('Token not found in login response:', response.data);
+            setErrorMessage('Unexpected error, please try again.');
+            navigation.goBack();
+        }
+
+    } catch (error: any) {
+        console.error('Login error:', error.response?.data || error.message);
+        navigation.goBack();
+        if (error.response && error.response.data) {
+            setErrorMessage(error.response.data.message || 'Invalid credentials. Please try again.');
+        } else {
+        setErrorMessage('Network error. Please try again.');
+        }
+    }
+    };
+  
 
   return (
     <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20, paddingTop: 50 }}>
+
         {/* Back Button */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
             <Ionicons name="arrow-back" size={24} color="white" />
@@ -20,12 +61,17 @@ const LoginScreen = () => {
 
         {/* Form Fields */}
         <View style={{ gap: 20 }}>
-          <TextInput placeholder="Email address" placeholderTextColor="#d1d5db"style={styles.input}/>
-          <TextInput placeholder="Password" placeholderTextColor="#d1d5db" secureTextEntry style={styles.input}/>
+          <TextInput placeholder="Email address" placeholderTextColor="#d1d5db" style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none"/>
+          <TextInput placeholder="Password" placeholderTextColor="#d1d5db" value={password} onChangeText={setPassword} secureTextEntry style={styles.input}/>
         </View>
 
+        {/* Error Message */}
+        {errorMessage !== '' && (
+            <Text style={styles.errorText}>{errorMessage}</Text>
+        )}
+
         {/* Sign Up Button */}
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text className="text-purple-700 font-semibold">Login</Text>
         </TouchableOpacity>
       </View>
@@ -63,5 +109,18 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
     borderWidth: 2,
     borderColor: 'purple',
-  }
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  errorText: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 10,
+    fontSize: 14,
+  },
 });
