@@ -14,8 +14,4 @@ export default [
         title: 'Features',
         description: 'Robust Password Generator, Customizable Length, Flexible Character Set, Instant Copy, Quick Refresh, Secure Storage'
     },
-    {
-        id: 4,
-        title: 'Create an account or login to get started!',
-    },
 ]

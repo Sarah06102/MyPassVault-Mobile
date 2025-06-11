@@ -9,17 +9,17 @@ import IntroSlideDots from './introSlideDots';
 const IntroSlider: React.FC = () => {
     const scrollX = useSharedValue(0);
     const [index, setIndex] = useState(0);
-    const flatListRef = useAnimatedRef<FlatList<any>>();
+    const flatListRef = useRef<FlatList<any>>(null);
 
     const handleOnScroll = useAnimatedScrollHandler({
         onScroll: (event) => {
             scrollX.value = event.contentOffset.x;
         },
-    });
+    }); 
         
 
     const handleOnViewableItemsChange = useRef (({ viewableItems }: { viewableItems: Array<ViewToken> }) => {
-        console.log('viewableItems', viewableItems)
+        console.log("viewableItems", viewableItems)
         setIndex(viewableItems[0]?.index ?? 0);
     }).current;
 
@@ -29,7 +29,7 @@ const IntroSlider: React.FC = () => {
 
     return (
         <View>
-            <Animated.FlatList data={Slides} ref={flatListRef} renderItem = {({ item, index }) => <IntroSlideItem item={item} index={index} scrollX={scrollX} goToNextSlide={() => {}}/>} horizontal pagingEnabled snapToAlignment='center' showsHorizontalScrollIndicator={false} onScroll={handleOnScroll} onViewableItemsChanged={handleOnViewableItemsChange} viewabilityConfig={viewabilityConfig}/>
+            <Animated.FlatList data={Slides} ref={flatListRef} renderItem = {({ item, index }) => <IntroSlideItem item={item} index={index} scrollX={scrollX} goToNextSlide={() => {const nextIndex = index + 1; if (nextIndex < Slides.length) {flatListRef.current?.scrollToIndex({ index: nextIndex }); }}}/>} horizontal pagingEnabled snapToAlignment="center" showsHorizontalScrollIndicator={false} onScroll={handleOnScroll} onViewableItemsChanged={handleOnViewableItemsChange} viewabilityConfig={viewabilityConfig}/>
             <IntroSlideDots data={Slides} scrollX={scrollX} index={index}/>
         </View>
     );

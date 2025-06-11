@@ -15,22 +15,24 @@ const { width } = Dimensions.get('screen');
 const IntroSlideDots: React.FC<IntroSlideDotsProps> = ({data, scrollX, index}) => {
   return (
     <View className="gap-3" style={styles.container}>
-        {data.map((_, idx: number) => {
-            const inputRange = [(idx-1)*width, idx*width, (idx+1)*width,];
-            
+        {data.map((_, idx) => {
+            const inputRange = [(idx - 1) * width, idx * width, (idx + 1) * width];
+
             const animatedStyle = useAnimatedStyle(() => {
-                const width = interpolate(
-                    scrollX.value,
-                    inputRange,
-                    [12, 30, 12],
-                    Extrapolate.CLAMP
+                const widthAnim = interpolate(
+                scrollX.value,
+                inputRange,
+                [12, 30, 12],
+                Extrapolate.CLAMP
                 );
-            return {
-                width,
-            };
-  });
-            return <Animated.View key= {idx.toString()} style={[styles.dot, index === idx ? styles.dotActive : {}, animatedStyle]} />;
-        })}
+                return { width: widthAnim };
+            });
+
+            return (
+                <Animated.View key={idx.toString()} style={[styles.dot, index === idx ? styles.dotActive : {}, animatedStyle, ]}/>
+                );
+            })}
+
     </View>
   );
 };
@@ -53,6 +55,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#a9a9a9',
     },
     dotActive: {
-        backgroundColor:'#fff5ee',
+        backgroundColor:'#d1d5db',
     }
 })
