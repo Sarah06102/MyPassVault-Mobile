@@ -33,7 +33,9 @@ const SignupScreen = () => {
       } else {
         setErrorMessage('Network error. Please try again.');
       }
-      navigation.goBack();
+      setTimeout(() => {
+        navigation.goBack();
+      }, 500);
     }
   };
 

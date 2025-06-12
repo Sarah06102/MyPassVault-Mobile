@@ -12,41 +12,42 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-  const handleLogin = async () => {
-    setErrorMessage('');
-    navigation.navigate('Loading');
-    try {
-        const response = await axios.post('https://mypassvault.onrender.com/api/login/', {
-        email: email.toLowerCase(),
-        password: password,
-        });
+    const handleLogin = async () => {
+        setErrorMessage('');
+        navigation.navigate('Loading');
+        try {
+            const response = await axios.post('https://mypassvault.onrender.com/api/login/', {
+            email: email.toLowerCase(),
+            password: password,
+            });
 
-        console.log('Login success:', response.data);
+            console.log('Login success:', response.data);
+            const access = response.data.access || response.data.token;
+            const refresh = response.data.refresh;
         
-        // Save token 
-        const { token } = response.data;
 
-        if (token) {
-            await AsyncStorage.setItem('token', token);
-            navigation.navigate('Dashboard');
-        } else {
-            console.error('Token not found in login response:', response.data);
-            setErrorMessage('Unexpected error, please try again.');
+            if (access) {
+                await AsyncStorage.setItem('token', access);
+                if (refresh) {
+                    await AsyncStorage.setItem('refresh_token', refresh);
+                }
+                navigation.navigate('Dashboard');
+            } else {
+                console.error('Token not found in login response:', response.data);
+                setErrorMessage('Unexpected error, please try again.');
+                navigation.goBack();
+            }
+
+        } catch (error: any) {
+            console.error('Login error:', error.response?.data || error.message);
             navigation.goBack();
+            if (error.response && error.response.data) {
+                setErrorMessage(error.response.data.message || 'Invalid credentials. Please try again.');
+            } else {
+            setErrorMessage('Network error. Please try again.');
+            }
         }
-
-    } catch (error: any) {
-        console.error('Login error:', error.response?.data || error.message);
-        navigation.goBack();
-        if (error.response && error.response.data) {
-            setErrorMessage(error.response.data.message || 'Invalid credentials. Please try again.');
-        } else {
-        setErrorMessage('Network error. Please try again.');
-        }
-    }
     };
-  
-
   return (
     <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20, paddingTop: 50 }}>
 
