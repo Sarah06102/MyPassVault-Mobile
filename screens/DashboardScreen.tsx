@@ -18,7 +18,7 @@ type Password = {
 
 type EditMode = 'none' | 'email' | 'password' | 'notes';
 
-const DashboardScreen = () => {
+const DashboardScreen = ({ navigation }: { navigation: any }) => {
     const [passwordEntries, setPasswordEntries] = useState<Password[]>([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newEntryData, setNewEntryData] = useState({ site_name: '', email: '', password: '', notes: '', domain_extension: '.com' });
@@ -160,12 +160,17 @@ const DashboardScreen = () => {
             console.error('Error generating password:', error.response?.data || error.message);
         }
     };
+    
 
 return (
     <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
         {/* Header */}
         <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                <Ionicons name="menu" size={24} color="white" />
+            </TouchableOpacity>
             <Text style={styles.headerText}>Your Saved Passwords</Text>
+
             <TouchableOpacity onPress={toggleModal}>
                 <Ionicons name="pencil" size={24} color="white" />
             </TouchableOpacity>
@@ -191,7 +196,7 @@ return (
                 </View>
                 <TextInput placeholder="Notes (optional)" placeholderTextColor="#ccc" value={newEntryData.notes} onChangeText={(text) => setNewEntryData({ ...newEntryData, notes: text })} style={styles.input} />
                 <TouchableOpacity onPress={handleAddPassword} style={styles.addButton}>
-                <Text style={{ color: '#7C3AED', fontWeight: 'bold' }}>Add Password</Text>
+                    <Text style={{ color: '#7C3AED', fontWeight: 'bold' }}>Add Password</Text>
                 </TouchableOpacity>
             </View>
         </Modal>
@@ -230,7 +235,7 @@ return (
 
                                 {editMode === 'password' ? (
                                     <>
-                                        <TextInput value={editedPassword} onChangeText={setEditedPassword} secureTextEntry={!showPassword} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
+                                        <TextInput value={editedPassword} onChangeText={setEditedPassword} secureTextEntry={!showPassword} style={[styles.detailValue, { marginLeft: 3, marginRight: 5, flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
                                         
                                         {/* Show Password Button */}
                                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
@@ -256,7 +261,7 @@ return (
                                     </>
                                 ) : (
                                     <>
-                                        <Text style={[styles.detailValue, { flex: 1, marginLeft: 4 }]} numberOfLines={1}>
+                                        <Text style={[styles.detailValue, { flex: 1, marginLeft: 4, marginBottom: 2, }]} numberOfLines={1}>
                                             {showPassword ? selectedEntry.password : '••••••••'}
                                         </Text>
                                         {/* Show Password Button */}
@@ -286,14 +291,14 @@ return (
 
                             {editMode === 'notes' ? (
                                 <>
-                                    <TextInput value={selectedEntry.notes || ''} onChangeText={(text) => selectedEntry && (selectedEntry.notes = text)} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
+                                    <TextInput value={selectedEntry.notes || ''} onChangeText={(text) => selectedEntry && (selectedEntry.notes = text)} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 10, }]} multiline numberOfLines={4} placeholder="Enter your notes here..." placeholderTextColor="#aaa"/>
                                     <TouchableOpacity style={styles.editBtn} onPress={() => handleSave()}>
                                         <Ionicons name="checkmark" size={20} color="#7C3AED" />
                                     </TouchableOpacity>
                                 </>
                             ) : (
                                 <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={[styles.detailValue, { flex: 1 }]} numberOfLines={1}>
+                                    <Text style={[styles.detailValue, { flex: 1, marginBottom: 2, marginLeft: 2, }]} numberOfLines={4}>
                                         {selectedEntry.notes || 'None'}
                                     </Text>
                                     <TouchableOpacity style={styles.editBtn} onPress={() => {
@@ -308,7 +313,6 @@ return (
 
                     </>
                 )}
-
                 <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={[styles.addButton, {marginTop: 15}]}>
                     <Text style={{ color: '#7C3AED', fontWeight: 'bold'  }}>Close</Text>
                 </TouchableOpacity>
@@ -339,8 +343,8 @@ return (
             contentContainerStyle={{ paddingBottom: 30 }}
         />
     </LinearGradient>    
-  )
-}
+  );
+};
 
 export default DashboardScreen;
 
