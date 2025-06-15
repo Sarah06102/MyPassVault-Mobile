@@ -4,23 +4,34 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Animated, Easing } from 'react-native';
 import Modal from 'react-native-modal';
+import * as Clipboard from 'expo-clipboard';
 
 type Password = {
     id: string;
     site_name: string;
     email: string;
     logo_url?: string;
+    password: string;
+    notes?: string;
 };
+
+type EditMode = 'none' | 'email' | 'password' | 'notes';
 
 const DashboardScreen = () => {
     const [passwordEntries, setPasswordEntries] = useState<Password[]>([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [newEntryData, setNewEntryData] = useState({ site_name: '', email: '', password: '', notes: '', domain_extension: '.com' });
-    const [formHeight] = useState(new Animated.Value(0));
     const [isModalVisible, setModalVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState<Password | null>(null);
+    const [isDetailModalVisible, setDetailModalVisible] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [isEditingEmail, setIsEditingEmail] = useState(false);
+    const [isEditingPassword, setIsEditingPassword] = useState(false);
+    const [editedEmail, setEditedEmail] = useState('');
+    const [editedPassword, setEditedPassword] = useState('');
+    const [editMode, setEditMode] = useState<EditMode>('none');
 
     const domainOptions = ['.com', '.ca', '.org', '.net', '.edu'];
 
@@ -93,7 +104,7 @@ const DashboardScreen = () => {
                         const isLast = index === domainOptions.length - 1;
 
                         return (
-                        <TouchableOpacity key={option} onPress={() => onSelect(option)} style={[ styles.button, isSelected && styles.selectedButton, isFirst && styles.firstButton, isLast && styles.lastButton, ]}>
+                        <TouchableOpacity key={option} onPress={() => onSelect(option)} style={[ styles.button, isSelected && styles.selectedButton, isFirst && styles.firstButton, isLast && styles.lastButton, !isSelected && !isLast && styles.borderRight, ]}>
                             <Text style={[styles.text, isSelected && styles.selectedText]}>{option}</Text>
                         </TouchableOpacity>
                         );
@@ -103,6 +114,39 @@ const DashboardScreen = () => {
             </>
         );
     };
+
+    const handleSave = async () => {
+        if (!selectedEntry) return;
+        try {
+            const token = await AsyncStorage.getItem('token');
+            console.log("Token being used:", token);
+            if (!token) {
+                throw new Error('No token found in storage');
+            }
+            const updatedData = {
+                site_name: selectedEntry.site_name,
+                email: editMode === 'email' ? editedEmail : selectedEntry.email,
+                password: editMode === 'password' ? editedPassword : selectedEntry.password,
+                notes: selectedEntry.notes || ''
+            };
+      
+            if (editMode === 'email') {
+                updatedData.email = editedEmail;
+            } else if (editMode === 'password') {
+                updatedData.password = editedPassword;
+            }
+        
+            await axios.put(`https://mypassvault.onrender.com/api/passwords/${selectedEntry.id}/`, updatedData, {
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', },
+            });
+      
+            await fetchPasswords();
+            setEditMode('none');
+        } catch (err) {
+            console.error('Save failed:', err);
+        }
+    };
+      
 
     const generatePasswordFromAPI = async () => {
         try {
@@ -152,22 +196,144 @@ return (
             </View>
         </Modal>
 
-        <FlatList data={passwordEntries} keyExtractor={(item) => item.id.toString()} renderItem={({ item }) => (
-            <View style={styles.entryContainer}>
-                {item.logo_url ? (
-                    <View style={styles.logoContainer}>
-                        <Image source={{ uri: item.logo_url }} style={styles.logoImage} resizeMode="contain" />
-                    </View>
-                ) : (
-                    <View style={styles.iconContainer}>
-                        <Ionicons name="folder" size={24} color="#7C3AED" />
-                    </View>
+        <Modal isVisible={isDetailModalVisible} onBackdropPress={() => setDetailModalVisible(false)} onBackButtonPress={() => setDetailModalVisible(false)} style={styles.modal}>
+            <View style={styles.modalContent}>
+                <Text style={styles.formTitle}>Password Details</Text>
+                {selectedEntry && (
+                    <>
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Site:</Text>
+                            <Text style={[styles.detailValue, { marginLeft: 4 }]}>{selectedEntry.site_name}</Text>
+                        </View>
+                            
+                        <View style={styles.detailRow}>
+                            <Text style={[styles.detailLabel, { marginRight: 6, marginTop: 0 }]}>Email:</Text>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            
+                            {editMode === 'email' ? (
+                                <TextInput value={editedEmail} onChangeText={setEditedEmail} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
+                            ) : (
+                                <Text style={[styles.detailValue, { flex: 1, marginBottom: 5, }]} numberOfLines={1} ellipsizeMode="tail">
+                                    {selectedEntry.email}
+                                </Text>
+                            )}
+                                {/* Update Email Button */}
+                                <TouchableOpacity style={styles.editBtn} onPress={() => { if (editMode === 'email') {handleSave();} else { setEditMode('email'); setEditedEmail(selectedEntry.email); }}}>
+                                    <Ionicons name={editMode === 'email' ? 'checkmark' : 'create-outline'} size={20} color="#7C3AED" />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <View style={[styles.detailRow, { alignItems: 'center' }]}>
+                            <Text style={styles.detailLabel}>Password:</Text>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+
+                                {editMode === 'password' ? (
+                                    <>
+                                        <TextInput value={editedPassword} onChangeText={setEditedPassword} secureTextEntry={!showPassword} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
+                                        
+                                        {/* Show Password Button */}
+                                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
+                                        </TouchableOpacity>
+
+                                        {/* Copy Password Button */}
+                                        <TouchableOpacity onPress={async () => { await Clipboard.setStringAsync(selectedEntry.password); setCopied(true); setTimeout(() => setCopied(false), 1500);}} style={styles.copyBtn}>
+                                            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color="#7C3AED" />
+                                        </TouchableOpacity>
+                                    
+
+                                        {/* Update Password Button */}
+                                        <TouchableOpacity style={styles.editBtn} onPress={() => {
+                                            if (editMode === 'password') handleSave();
+                                            else {
+                                                setEditMode('password');
+                                                setEditedPassword(selectedEntry.password);
+                                            }
+                                        }}>
+                                            <Ionicons name="checkmark" size={20} color="#7C3AED" />
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Text style={[styles.detailValue, { flex: 1, marginLeft: 4 }]} numberOfLines={1}>
+                                            {showPassword ? selectedEntry.password : '••••••••'}
+                                        </Text>
+                                        {/* Show Password Button */}
+                                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
+                                        </TouchableOpacity>
+                                        {/* Copy Password Button */}
+                                        <TouchableOpacity onPress={async () => { await Clipboard.setStringAsync(selectedEntry.password); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={styles.copyBtn}>
+                                            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color="#7C3AED" />
+                                        </TouchableOpacity>
+
+                                        {/* Update Password Button */}
+                                        <TouchableOpacity style={styles.editBtn} onPress={() => {
+                                            setEditMode('password');
+                                            setEditedPassword(selectedEntry.password);
+                                        }}>
+                                            <Ionicons name="create-outline" size={20} color="#7C3AED" />
+                                        </TouchableOpacity>
+                                    </>
+                                )}
+                            </View>
+                        </View>
+
+                        <View style={styles.detailRow}>
+                            <Text style={styles.detailLabel}>Notes:</Text>
+                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+
+                            {editMode === 'notes' ? (
+                                <>
+                                    <TextInput value={selectedEntry.notes || ''} onChangeText={(text) => selectedEntry && (selectedEntry.notes = text)} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
+                                    <TouchableOpacity style={styles.editBtn} onPress={() => handleSave()}>
+                                        <Ionicons name="checkmark" size={20} color="#7C3AED" />
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                    <Text style={[styles.detailValue, { flex: 1 }]} numberOfLines={1}>
+                                        {selectedEntry.notes || 'None'}
+                                    </Text>
+                                    <TouchableOpacity style={styles.editBtn} onPress={() => {
+                                        setEditMode('notes');
+                                    }}>
+                                        <Ionicons name="create-outline" size={20} color="#7C3AED" />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                            </View>
+                        </View>
+
+                    </>
                 )}
-                <View style={styles.textContainer}>
-                    <Text style={styles.siteName}>{item.site_name}</Text>
-                    <Text style={styles.email}>{item.email}</Text>
-                </View>
+
+                <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={[styles.addButton, {marginTop: 15}]}>
+                    <Text style={{ color: '#7C3AED', fontWeight: 'bold'  }}>Close</Text>
+                </TouchableOpacity>
             </View>
+        </Modal>
+
+
+        <FlatList data={passwordEntries} keyExtractor={(item) => item.id.toString()} renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => { setSelectedEntry(item); setDetailModalVisible(true); setModalVisible(false); }}>
+                <View style={styles.entryContainer}>
+                    {item.logo_url ? (
+                        <View style={styles.logoContainer}>
+                            <Image source={{ uri: item.logo_url }} style={styles.logoImage} resizeMode="contain" />
+                        </View>
+                    ) : (
+                        <View style={styles.iconContainer}>
+                            <Ionicons name="folder" size={24} color="#7C3AED" />
+                        </View>
+                    )}
+                    <View style={styles.textContainer}>
+                        <Text style={styles.siteName}>{item.site_name}</Text>
+                        <Text style={styles.email}>{item.email}</Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
             )}
             ListEmptyComponent={<Text style={{ color: 'white', textAlign: 'center', marginTop: 20 }}>No passwords yet. Tap the pencil to add one!</Text>}
             contentContainerStyle={{ paddingBottom: 30 }}
@@ -318,5 +484,37 @@ const styles = StyleSheet.create({
     selectedText: {
         color: '#7C3AED',
         fontWeight: 'bold',
-    },     
+    },
+    detailLabel: {
+        fontWeight: 'bold',
+        marginTop: 4, 
+    },
+    detailValue: {
+        color: '#555',
+        fontSize: 14,
+        marginTop: 4, 
+    },
+    detailRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+        flexWrap: 'wrap',
+    },
+    editBtn: {
+        marginLeft: 6,
+        padding: 6,
+        backgroundColor: '#F3E8FF',
+        borderRadius: 6,
+    },
+    copyBtn: {
+        marginLeft: 6,
+        padding: 6,
+        backgroundColor: '#F3E8FF',
+        borderRadius: 6,
+    }, 
+    eyeBtn: {
+        padding: 6,
+        borderRadius: 6,
+        backgroundColor: '#F3E8FF',
+    },
 });
