@@ -20,15 +20,12 @@ type EditMode = 'none' | 'email' | 'password' | 'notes';
 
 const DashboardScreen = ({ navigation }: { navigation: any }) => {
     const [passwordEntries, setPasswordEntries] = useState<Password[]>([]);
-    const [showAddForm, setShowAddForm] = useState(false);
     const [newEntryData, setNewEntryData] = useState({ site_name: '', email: '', password: '', notes: '', domain_extension: '.com' });
     const [isModalVisible, setModalVisible] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [selectedEntry, setSelectedEntry] = useState<Password | null>(null);
     const [isDetailModalVisible, setDetailModalVisible] = useState(false);
     const [copied, setCopied] = useState(false);
-    const [isEditingEmail, setIsEditingEmail] = useState(false);
-    const [isEditingPassword, setIsEditingPassword] = useState(false);
     const [editedEmail, setEditedEmail] = useState('');
     const [editedPassword, setEditedPassword] = useState('');
     const [editMode, setEditMode] = useState<EditMode>('none');
@@ -166,7 +163,7 @@ return (
     <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
         {/* Header */}
         <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
                 <Ionicons name="menu" size={24} color="white" />
             </TouchableOpacity>
             <Text style={styles.headerText}>Your Saved Passwords</Text>
@@ -390,8 +387,11 @@ const styles = StyleSheet.create({
     },
     headerText: { 
         color: 'white', 
-        fontSize: 20, 
-        fontWeight: 'bold' 
+        fontSize: 25, 
+        fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
     formContainer: {
         overflow: 'hidden',

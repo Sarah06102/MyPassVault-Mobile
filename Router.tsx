@@ -7,7 +7,7 @@ import DashboardScreen from './screens/DashboardScreen';
 import LoadingScreen from './screens/LoadingScreen';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import CustomDrawerContent from './components/Panel';
+import Panel from './components/Panel';
 import SecurityScreen from './screens/SecurityScreen';
 import HelpScreen from './screens/HelpScreen';
 import SettingsScreen from './screens/SettingsScreen';
@@ -17,7 +17,7 @@ const Drawer = createDrawerNavigator();
 
 const AppDrawer = () => {
   return (
-    <Drawer.Navigator drawerContent={(props) => <CustomDrawerContent {...props} />} screenOptions={{ headerShown: false }}>
+    <Drawer.Navigator drawerContent={(props) => <Panel {...props} />} screenOptions={{ headerShown: false }}>
       <Drawer.Screen name="Dashboard" component={DashboardScreen} />
       <Drawer.Screen name="Security" component={SecurityScreen} />
       <Drawer.Screen name="Help" component={HelpScreen} />
