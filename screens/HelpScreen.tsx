@@ -55,9 +55,18 @@ export default HelpScreen;
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        gap: 15
+        backgroundColor: 'white',
+        borderRadius: 16,
+        padding: 20,
+        gap: 15,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        elevation: 4,
+        marginBottom: 40,
     },
+      
     headerText: { 
         color: 'white', 
         fontSize: 25, 
@@ -71,13 +80,13 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     title: {
-        color: 'white',
+        color: 'black',
         fontWeight: 'bold',
         fontSize: 20,
         textDecorationLine: 'underline',
     },
     text: {
-        color: 'white',
+        color: 'black',
         fontWeight: 'semibold',
         fontSize: 15,
     },

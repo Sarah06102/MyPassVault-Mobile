@@ -3,30 +3,33 @@ import { DrawerContentScrollView } from "@react-navigation/drawer";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect } from '@react-navigation/native';
+import globalEventBus from '../utils/globalEventBus';
 
 const Panel = (props: any) => {
     const [userEmail, setUserEmail] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
 
-    useFocusEffect(
-        React.useCallback(() => {
-            const loadEmail = async () => {
-                const email = await AsyncStorage.getItem("email");
-                const first = await AsyncStorage.getItem("first_name");
-                const last = await AsyncStorage.getItem("last_name");
-        
-                console.log('Loaded from AsyncStorage:', { email, first, last });
-
-                if (email) setUserEmail(email);
-                if (first) setFirstName(first);
-                if (last) setLastName(last);
-            };
-            loadEmail();
-        }, [])
-    );
-
+    useEffect(() => {
+        const loadEmail = async () => {
+            const email = await AsyncStorage.getItem("email");
+            const first = await AsyncStorage.getItem("first_name");
+            const last = await AsyncStorage.getItem("last_name");
+            setUserEmail(email || '');
+            setFirstName(first || '');
+            setLastName(last || '');
+        };
+      
+        loadEmail();
+      
+        globalEventBus.on('profileUpdated', loadEmail);
+        return () => {
+            globalEventBus.off('profileUpdated', loadEmail);
+        };
+    }, []);
+      
+      
+      
     const handleLogout = async () => {
         await AsyncStorage.multiRemove(["token", "email", "first_name", "last_name"]);
         props.navigation.reset({
