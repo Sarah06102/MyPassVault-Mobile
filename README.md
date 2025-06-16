@@ -4,13 +4,13 @@
 
 ## Features
 
-- 🔐 Login with secure credentials
-- 🔑 Generate strong, random passwords
-- 🧠 Check password strength using `zxcvbn`
-- 📋 Save, view, and manage your passwords
-- 🎨 Smooth UI with gradients and animations
-- 📱 Responsive and mobile-optimized design
-- 🔄 Animated loading screen synced with login completion
+- Login with secure credentials
+- Generate strong, random passwords
+- Check password strength (using `zxcvbn`)
+- Save, view, and manage your passwords
+- Smooth UI with gradients and animations
+- Responsive and mobile-optimized design
+- Animated loading screen synced with login completion
 
 ## Tech Stack
 
