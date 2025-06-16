@@ -34,7 +34,7 @@ const Panel = (props: any) => {
         await AsyncStorage.multiRemove(["token", "email", "first_name", "last_name"]);
         props.navigation.reset({
             index: 0,
-            routes: [{ name: "Login" }],
+            routes: [{ name: "Onboarding" }],
         });
     };
     return (

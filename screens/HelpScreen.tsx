@@ -24,16 +24,19 @@ const HelpScreen = () => {
         )
     };
     return (
-        <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20, paddingTop: 50 }}>
-
-            {/* Back Button */}
-            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
-                <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-
+        <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
+            
             <View style={styles.headerContainer}>
+                {/* Back Button */}
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                    <Ionicons name="menu" style={styles.icon} size={24} color="white" />
+                </TouchableOpacity>
                 <Text style={styles.headerText}>Help & Support</Text>
             </View>
+               
             <View style={styles.container}>
                 <Text style={styles.title}>Contact Us</Text>
                 <Text style={styles.text}>Have questions or need help? Reach out to us at <MailLink url="mailto:mypassvaulthelp@gmail.com" text="mypassvaulthelp@gmail.com" />. We're here to help!</Text>
@@ -66,18 +69,26 @@ const styles = StyleSheet.create({
         elevation: 4,
         marginBottom: 40,
     },
-      
     headerText: { 
         color: 'white', 
         fontSize: 25, 
-        fontWeight: 'bold', 
+        fontWeight: 'bold',
         textShadowColor: 'rgba(0, 0, 0, 0.5)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 4,
+        right: 88,
+        top: 5,
     },
     headerContainer: { 
+        flexDirection: 'row', 
+        justifyContent: 'space-between', 
         alignItems: 'center', 
         marginBottom: 40,
+        marginTop: 60,
+    },
+    icon: {
+        right: 55,
+        bottom: 10,
     },
     title: {
         color: 'black',

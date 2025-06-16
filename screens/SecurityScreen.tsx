@@ -44,7 +44,11 @@ const SecurityScreen = () => {
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
                 <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>
+            
             <View style={styles.headerContainer}>
+                <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                    <Ionicons name="menu" style={styles.panelIcon} size={24} color="white" />
+                </TouchableOpacity>
                 <Text style={styles.headerText}>Check Your Password Strength</Text>
                 
             </View>
@@ -53,7 +57,7 @@ const SecurityScreen = () => {
             <Text style={{ textAlign: 'center' }}>Enter your password below to check how secure it is!</Text>
             <View style={{ marginBottom: 10 }} />
                 <View style={styles.inputContainer}>
-                    <TextInput onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} style={[styles.input, isFocused && { borderColor: 'gray', shadowColor: '#6366f1', shadowOpacity: 0.2 },]} secureTextEntry={!showPassword} placeholder="Enter password" placeholderTextColor="#fff" value={password} onChangeText={setPassword}/>
+                    <TextInput onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)} style={[styles.input, isFocused && { borderColor: 'gray', shadowColor: '#6366f1', shadowOpacity: 0.2 },]} secureTextEntry={!showPassword} placeholder="Enter password" placeholderTextColor="gray" value={password} onChangeText={setPassword}/>
                     <TouchableOpacity onPress={() => setShowPassword(prev => !prev)} style={styles.icon}>
                         <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="gray" />
                     </TouchableOpacity>
@@ -130,10 +134,14 @@ const styles = StyleSheet.create({
         paddingRight: 40,
         color: 'black',
     },
+    panelIcon: {
+        bottom: 43.5,
+        right: 130,
+    },
     icon: { 
         position: 'absolute', 
         right: 10, 
-        top: 12,
+        top: 10,
     },
     strengthBar: { 
         height: 8, 

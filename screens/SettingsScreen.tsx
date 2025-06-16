@@ -73,9 +73,13 @@ const SettingsScreen = () => {
          {/* Back Button */}
         <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
             <Ionicons name="arrow-back" size={24} color="white" />
+            <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                <Ionicons name="menu" style={styles.icon} size={24} color="white" />
+            </TouchableOpacity>
         </TouchableOpacity>
         <ScrollView>
             <View style={styles.headerContainer}>
+                
             <Text style={styles.headerText}>Account Settings</Text>
         </View>
 
@@ -87,7 +91,7 @@ const SettingsScreen = () => {
             <View style={styles.passwordContainer}>
                 <TextInput style={[styles.input, { paddingRight: 40 }]} placeholder="New Password" placeholderTextColor="#aaa" secureTextEntry={!showPassword} value={userPassword} onChangeText={setUserPassword}/>
                 <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(prev => !prev)}>
-                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
+                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="gray" />
                 </TouchableOpacity>
             </View>
 
@@ -139,6 +143,10 @@ const styles = StyleSheet.create({
         borderRadius: 999,
         padding: 12,
         color: 'black',
+    },
+    icon: { 
+        left: 35,
+        bottom: 23.5,
     },
     passwordContainer: {
         position: 'relative',

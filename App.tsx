@@ -1,19 +1,20 @@
-import { StatusBar } from 'expo-status-bar';
+import { StatusBar } from 'react-native';
+import { useColorScheme } from 'react-native';
 import { Text, View, StyleSheet } from 'react-native';
 import "./global.css"
-import IntroSlider from './components/introSlider';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Router from './Router';
 // import AppBackground from './components/appBackground';
 
 const Stack = createNativeStackNavigator();
 
+
 export default function App() {
+  const isDarkMode = useColorScheme() === 'dark';
   return (
       <>
-        {/* <AppBackground source={require('./assets/keyboard_background.png')} style={styles.background} resizeMode="repeat" blurRadius={2} > */}
         <Router />
-      </>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent /></>
   );
 }
 

@@ -6,6 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+declare global {
+    var loginSuccess: boolean | undefined;
+}
+
+
 const LoginScreen = () => {
     const navigation = useNavigation<any>();
     const [email, setEmail] = useState('');
@@ -14,6 +19,7 @@ const LoginScreen = () => {
 
     const handleLogin = async () => {
         setErrorMessage('');
+        globalThis.loginSuccess = false;
         navigation.navigate('Loading');
         try {
             const response = await axios.post('https://mypassvault.onrender.com/api/login/', {
@@ -40,14 +46,15 @@ const LoginScreen = () => {
                 await AsyncStorage.setItem('first_name', profileData.first_name || '');
                 await AsyncStorage.setItem('last_name', profileData.last_name || '');
             
-                navigation.navigate('Dashboard');
+                globalThis.loginSuccess = true;
             } else {
                 console.error('Token not found in login response:', response.data);
                 setErrorMessage('Unexpected error, please try again.');
                 navigation.goBack();
             }
-            
+
         } catch (error: any) {
+            globalThis.loginSuccess = false;
             console.error('Login error:', error.response?.data || error.message);
             navigation.goBack();
             if (error.response && error.response.data) {

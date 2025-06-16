@@ -162,12 +162,11 @@ const DashboardScreen = ({ navigation }: { navigation: any }) => {
 return (
     <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
         {/* Header */}
-        <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                <Ionicons name="menu" size={24} color="white" />
+        <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                <Ionicons name="menu" size={24} color="white" style={styles.icon}/>
             </TouchableOpacity>
+        <View style={styles.headerContainer}>
             <Text style={styles.headerText}>Your Saved Passwords</Text>
-
             <TouchableOpacity onPress={toggleModal}>
                 <Ionicons name="pencil" size={24} color="white" />
             </TouchableOpacity>
@@ -377,7 +376,10 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 20,
     },
-    
+    icon: {
+        top: 45,
+        left: 10,
+    },
     headerContainer: { 
         flexDirection: 'row', 
         justifyContent: 'space-between', 
@@ -392,6 +394,7 @@ const styles = StyleSheet.create({
         textShadowColor: 'rgba(0, 0, 0, 0.5)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 4,
+        left: 50,
     },
     formContainer: {
         overflow: 'hidden',
