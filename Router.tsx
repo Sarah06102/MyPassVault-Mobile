@@ -11,6 +11,8 @@ import Panel from './components/Panel';
 import SecurityScreen from './screens/SecurityScreen';
 import HelpScreen from './screens/HelpScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import ResetPassword from './screens/ResetPassword';
+import ResetPasswordSent from './screens/ResetPasswordSent';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -35,6 +37,8 @@ export default function Router() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Loading" component={LoadingScreen} />
         <Stack.Screen name="Dashboard" component={AppDrawer} />
+        <Stack.Screen name="reset-password" component={ResetPassword} />
+        <Stack.Screen name="reset-password-set" component={ResetPasswordSent} />
       </Stack.Navigator>
     </NavigationContainer>
   );

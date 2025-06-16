@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const SignupScreen = () => {
   const navigation = useNavigation<any>();
@@ -24,7 +25,27 @@ const SignupScreen = () => {
         password: password,
       });
       console.log('Signup successful:', response.data);
+      const access = response.data.access || response.data.token;
+      const refresh = response.data.refresh;
+
+      if (access) {
+        await AsyncStorage.setItem('token', access);
+        if (refresh) {
+          await AsyncStorage.setItem('refresh_token', refresh);
+        }
+
+        const profileRes = await fetch('https://mypassvault.onrender.com/api/profile/', {
+          headers: { Authorization: `Bearer ${access}` },
+        });
+        const profileData = await profileRes.json();
+
+        await AsyncStorage.setItem('email', profileData.email || '');
+        await AsyncStorage.setItem('first_name', profileData.first_name || '');
+        await AsyncStorage.setItem('last_name', profileData.last_name || '');
+      }
+
       navigation.navigate('Dashboard');
+
   
     } catch (error: any) {
       console.error('Signup error:', error.response?.data || error.message);

@@ -1,15 +1,15 @@
-import { Text, View, TouchableOpacity, StyleSheet, TextInput } from 'react-native'
+import { Text, View, TouchableOpacity, StyleSheet, TextInput, Linking, Touchable } from 'react-native'
 import React, { useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
 
 declare global {
     var loginSuccess: boolean | undefined;
 }
-
 
 const LoginScreen = () => {
     const navigation = useNavigation<any>();
@@ -88,6 +88,10 @@ const LoginScreen = () => {
                     <Text style={styles.errorText}>{errorMessage}</Text>
                 )}
 
+                {/* <TouchableOpacity onPress={() => navigation.navigate("reset-password")} style={{marginTop: 20, }}>
+                    <Text className="text-white text-center" style={{textDecorationLine: 'underline'}}>Forgot password?</Text>
+                </TouchableOpacity> */}
+
                 {/* Sign Up Button */}
                 <TouchableOpacity style={styles.button} onPress={handleLogin}>
                     <Text className="text-purple-700 font-semibold">Login</Text>
@@ -101,44 +105,44 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 const styles = StyleSheet.create({
-  input: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#C084FC',
-    color: 'white',
-    paddingVertical: 10,
-    fontSize: 16,
-  },
-  title: {
-    color: 'white', 
-    fontSize: 30, 
-    fontWeight: 'bold', 
-    marginBottom: 40,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  button: {
-    marginTop: 40,
-    backgroundColor: 'white',
-    paddingVertical: 12,
-    alignItems: 'center',
-    alignSelf: 'center',
-    width: '80%',
-    borderRadius: 9999,
-    borderWidth: 2,
-    borderColor: 'purple',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  errorText: {
-    color: 'red',
-    textAlign: 'center',
-    marginTop: 10,
-    fontSize: 14,
-  },
+    input: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#C084FC',
+        color: 'white',
+        paddingVertical: 10,
+        fontSize: 16,
+    },
+    title: {
+        color: 'white', 
+        fontSize: 30, 
+        fontWeight: 'bold', 
+        marginBottom: 40,
+        textShadowColor: 'rgba(0, 0, 0, 0.5)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
+    },
+    button: {
+        marginTop: 40,
+        backgroundColor: 'white',
+        paddingVertical: 12,
+        alignItems: 'center',
+        alignSelf: 'center',
+        width: '80%',
+        borderRadius: 9999,
+        borderWidth: 2,
+        borderColor: 'purple',
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    errorText: {
+        color: 'red',
+        textAlign: 'center',
+        marginTop: 10,
+        fontSize: 14,
+    },
 });
