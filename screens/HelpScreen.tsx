@@ -27,13 +27,14 @@ const HelpScreen = () => {
         <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
             
             <View style={styles.headerContainer}>
-                {/* Back Button */}
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
-                    <Ionicons name="arrow-back" size={24} color="white" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                    <Ionicons name="menu" style={styles.icon} size={24} color="white" />
-                </TouchableOpacity>
+                <View style={styles.iconGroup}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconWrapper}>
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconWrapper}>
+                        <Ionicons name="menu" size={30} color="white" />
+                    </TouchableOpacity>
+                </View>
                 <Text style={styles.headerText}>Help & Support</Text>
             </View>
                
@@ -70,25 +71,28 @@ const styles = StyleSheet.create({
         marginBottom: 40,
     },
     headerText: { 
-        color: 'white', 
-        fontSize: 25, 
+        color: 'white',
+        fontSize: 25,
         fontWeight: 'bold',
         textShadowColor: 'rgba(0, 0, 0, 0.5)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 4,
-        right: 88,
-        top: 5,
     },
     headerContainer: { 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: 40,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
         marginTop: 60,
+        marginBottom: 30,
     },
-    icon: {
-        right: 55,
-        bottom: 10,
+    iconGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 20,
+    },
+      
+    iconWrapper: {
+        marginRight: 12,
     },
     title: {
         color: 'black',

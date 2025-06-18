@@ -70,16 +70,15 @@ const SettingsScreen = () => {
 
   return (
     <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20, paddingTop: 50, }}>
-         {/* Back Button */}
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginBottom: 20 }}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-            <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                <Ionicons name="menu" style={styles.icon} size={24} color="white" />
-            </TouchableOpacity>
-        </TouchableOpacity>
-        <ScrollView>
-            <View style={styles.headerContainer}>
-                
+        <View style={styles.headerContainer}>
+            <View style={styles.iconGroup}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconWrapper}>
+                    <Ionicons name="arrow-back" size={24} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.iconWrapper}>
+                    <Ionicons name="menu" size={30} color="white" />
+                </TouchableOpacity>
+            </View>
             <Text style={styles.headerText}>Account Settings</Text>
         </View>
 
@@ -99,7 +98,6 @@ const SettingsScreen = () => {
             <Text style={styles.buttonText}>Save Changes</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
     </LinearGradient>
   );
 };
@@ -108,16 +106,26 @@ export default SettingsScreen;
 
 const styles = StyleSheet.create({
     headerText: { 
-        color: 'white', 
-        fontSize: 25, 
-        fontWeight: 'bold', 
+        color: 'white',
+        fontSize: 25,
+        fontWeight: 'bold',
         textShadowColor: 'rgba(0, 0, 0, 0.5)',
         textShadowOffset: { width: 0, height: 2 },
         textShadowRadius: 4,
     },
     headerContainer: { 
-        alignItems: 'center', 
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 40,
+        marginTop: 20,
+    },
+    iconGroup: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    iconWrapper: {
+        marginRight: 10,
     },
     title: {
         color: 'white',
