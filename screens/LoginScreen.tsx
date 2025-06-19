@@ -19,6 +19,7 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [showFaceIdButton, setShowFaceIdButton] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const checkFaceIdSetting = async () => {
@@ -28,67 +29,66 @@ const LoginScreen = () => {
         checkFaceIdSetting();
     }, []);
 
+    const checkAndPromptFaceId = async () => {
+        const hasPrompted = await AsyncStorage.getItem('faceIdPromptedOnce');
+        if (!hasPrompted) {
+          Alert.alert(
+            'Enable Face ID?',
+            'Would you like to use Face ID to log in faster next time?',
+            [
+              { text: 'Not Now', onPress: () => {} },
+              {
+                text: 'Enable',
+                onPress: async () => {
+                  await AsyncStorage.setItem('faceIdEnabled', 'true');
+                }
+              }
+            ]
+          );
+          await AsyncStorage.setItem('faceIdPromptedOnce', 'true');
+        }
+    };
+
     const handleLogin = async () => {
         setErrorMessage('');
         globalThis.loginSuccess = false;
       
         try {
-          const response = await axios.post('https://mypassvault.onrender.com/api/login/', {
-            email: email.toLowerCase(),
-            password: password,
-          });
+            const response = await axios.post('https://mypassvault.onrender.com/api/login/', {
+                email: email.toLowerCase(),
+                password: password,
+            });
       
-          const access = response.data.access || response.data.token;
-          const refresh = response.data.refresh;
+            const access = response.data.access || response.data.token;
+            const refresh = response.data.refresh;
       
-          if (access) {
-            await AsyncStorage.setItem('token', access);
-            if (refresh) {
-              await AsyncStorage.setItem('refresh_token', refresh);
+            if (access) {
+                await AsyncStorage.setItem('token', access);
+                if (refresh) {
+                await AsyncStorage.setItem('refresh_token', refresh);
+                }
+      
+                const profileRes = await fetch('https://mypassvault.onrender.com/api/profile/', {
+                headers: { Authorization: `Bearer ${access}` },
+                });
+                const profileData = await profileRes.json();
+      
+                await AsyncStorage.setItem('email', profileData.email || '');
+                await AsyncStorage.setItem('first_name', profileData.first_name || '');
+                await AsyncStorage.setItem('last_name', profileData.last_name || '');
+                await SecureStore.setItemAsync('email', email.toLowerCase());
+                await SecureStore.setItemAsync('password', password);
+        
+                globalThis.loginSuccess = true;
+                navigation.navigate('Loading');
+                checkAndPromptFaceId(); 
+                  
+            } else {
+                setErrorMessage('Unexpected error, please try again.');
             }
       
-            const profileRes = await fetch('https://mypassvault.onrender.com/api/profile/', {
-              headers: { Authorization: `Bearer ${access}` },
-            });
-            const profileData = await profileRes.json();
-      
-            await AsyncStorage.setItem('email', profileData.email || '');
-            await AsyncStorage.setItem('first_name', profileData.first_name || '');
-            await AsyncStorage.setItem('last_name', profileData.last_name || '');
-            await SecureStore.setItemAsync('email', email.toLowerCase());
-            await SecureStore.setItemAsync('password', password);
-      
-            globalThis.loginSuccess = true;
-      
-            navigation.navigate('Loading');
-
-            Alert.alert(
-                "Enable Face ID?",
-                "Would you like to use Face ID for faster login next time?",
-                [
-                    {
-                        text: "No",
-                        style: "cancel",
-                        onPress: async () => {
-                            await SecureStore.deleteItemAsync('use_face_id');
-                        },
-                    },
-                    {
-                        text: "Yes",
-                        onPress: async () => {
-                            await SecureStore.setItemAsync('use_face_id', 'true');
-                        },
-                    },
-                ]
-            );
-
-          } else {
-            setErrorMessage('Unexpected error, please try again.');
-          }
-      
         } catch (error: any) {
-          globalThis.loginSuccess = false;
-      
+            globalThis.loginSuccess = false;
             if (error.response && error.response.data) {
                 setErrorMessage(error.response.data.message || 'Invalid credentials.');
             } else {
@@ -122,6 +122,7 @@ const LoginScreen = () => {
                 await AsyncStorage.setItem('last_name', profileData.last_name || '');
       
                 globalThis.loginSuccess = true;
+                await AsyncStorage.setItem('token', access);
                 navigation.navigate('Dashboard');
             } else {
                 console.error('Biometric login failed: Token not found');
@@ -192,7 +193,10 @@ const LoginScreen = () => {
                 {/* Form Fields */}
                 <View style={{ gap: 20 }}>
                     <TextInput placeholder="Email address" placeholderTextColor="#d1d5db" style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none"/>
-                    <TextInput placeholder="Password" placeholderTextColor="#d1d5db" value={password} onChangeText={setPassword} secureTextEntry style={styles.input}/>
+                    <TextInput placeholder="Password" placeholderTextColor="#d1d5db" value={password} secureTextEntry={!showPassword} onChangeText={setPassword} style={styles.input}/>
+                    <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 10, top: '100%', transform: [{ translateY: -32 }], }}>
+                        <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="white" />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Error Message */}

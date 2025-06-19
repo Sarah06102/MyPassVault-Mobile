@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, Image } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, Image, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +29,22 @@ const DashboardScreen = ({ navigation }: { navigation: any }) => {
     const [editedEmail, setEditedEmail] = useState('');
     const [editedPassword, setEditedPassword] = useState('');
     const [editMode, setEditMode] = useState<EditMode>('none');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [filteredEntries, setFilteredEntries] = useState<Password[]>([]);
+
+    useEffect(() => {
+        if (searchQuery.trim() === '') {
+            setFilteredEntries(passwordEntries);
+        } else {
+            const query = searchQuery.toLowerCase();
+            const filtered = passwordEntries.filter(entry =>
+                entry.site_name.toLowerCase().includes(query) ||
+                entry.email.toLowerCase().includes(query)
+            );
+            setFilteredEntries(filtered);
+        }
+    }, [searchQuery, passwordEntries]);
+      
 
     const domainOptions = ['.com', '.ca', '.org', '.net', '.edu'];
 
@@ -107,7 +123,6 @@ const DashboardScreen = ({ navigation }: { navigation: any }) => {
                         );
                     })}
                 </View>
-                
             </>
         );
     };
@@ -144,7 +159,6 @@ const DashboardScreen = ({ navigation }: { navigation: any }) => {
         }
     };
       
-
     const generatePasswordFromAPI = async () => {
         try {
           const token = await AsyncStorage.getItem('token');
@@ -157,191 +171,225 @@ const DashboardScreen = ({ navigation }: { navigation: any }) => {
             console.error('Error generating password:', error.response?.data || error.message);
         }
     };
+
+    const handleDeleteEntry = async () => {
+        if (!selectedEntry) return;
+        try {
+            const token = await AsyncStorage.getItem('token');
+            await axios.delete(`https://mypassvault.onrender.com/api/passwords/${selectedEntry.id}/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setDetailModalVisible(false);
+            fetchPasswords();
+        } catch (error) {
+            console.error('Error deleting password:', error);
+        }
+    };
+
+    const confirmDelete = () => {
+        Alert.alert(
+          'Confirm Delete',
+          'Are you sure you want to delete this password entry?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: handleDeleteEntry }
+          ]
+        );
+    };
     
+    return (
+        <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
+            {/* Header */}
+            <View style={styles.headerContainer}>
+                <TouchableOpacity onPress={() => navigation.openDrawer()}>
+                    <Ionicons name="menu" size={30} color="white" />
+                </TouchableOpacity>
 
-return (
-    <LinearGradient colors={['#7C3AED', '#4C1D95']} style={{ flex: 1, paddingHorizontal: 20 }}>
-        {/* Header */}
-        <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={() => navigation.openDrawer()}>
-                <Ionicons name="menu" size={30} color="white" />
-            </TouchableOpacity>
+                <Text style={styles.headerText}>Your Saved Passwords</Text>
 
-            <Text style={styles.headerText}>Your Saved Passwords</Text>
-
-            <TouchableOpacity onPress={toggleModal}>
-                <Ionicons name="pencil" size={24} color="white" />
-            </TouchableOpacity>
-        </View>
-
-        {/* Passwords List */}
-        <Modal isVisible={isModalVisible} onBackdropPress={toggleModal} onBackButtonPress={toggleModal} swipeDirection="down" onSwipeComplete={toggleModal} style={styles.modal}>
-            <View style={styles.modalContent}>
-                <Text style={styles.formTitle}>Add New Password</Text>
-                <TextInput placeholder="Site Name" placeholderTextColor="#ccc" value={newEntryData.site_name} onChangeText={(text) => setNewEntryData({ ...newEntryData, site_name: text })} style={styles.input} />
-                <DomainSelector selected={newEntryData.domain_extension} onSelect={(value: any) => setNewEntryData({ ...newEntryData, domain_extension: value })}/>
-                <TextInput placeholder="Email" placeholderTextColor="#ccc" value={newEntryData.email} onChangeText={(text) => setNewEntryData({ ...newEntryData, email: text })} style={styles.input} />
-                <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10, }}>
-                    <View style={{ flex: 1, position: 'relative' }}>
-                        <TextInput placeholder="Password" placeholderTextColor="#ccc" value={newEntryData.password} onChangeText={(text) => setNewEntryData({ ...newEntryData, password: text })} style={[styles.input, { flex: 1, marginBottom: 0, paddingRight: 40 }]} secureTextEntry={!showPassword} />
-                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: [{ translateY: -12 }], }}>
-                            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={24} color="#7C3AED" />
-                        </TouchableOpacity>
-                    </View>
-                    <TouchableOpacity onPress={generatePasswordFromAPI} style={{ paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#E7C6FF', marginLeft: 8, borderRadius: 999, }}>
-                        <Text style={{ color: '#7C3AED', fontWeight: 'bold', }}>Generate</Text>
-                    </TouchableOpacity>
-                </View>
-                <TextInput placeholder="Notes (optional)" placeholderTextColor="#ccc" value={newEntryData.notes} onChangeText={(text) => setNewEntryData({ ...newEntryData, notes: text })} style={styles.input} />
-                <TouchableOpacity onPress={handleAddPassword} style={styles.addButton}>
-                    <Text style={{ color: '#7C3AED', fontWeight: 'bold' }}>Add Password</Text>
+                <TouchableOpacity onPress={toggleModal}>
+                    <Ionicons name="add-circle-outline" size={30} color="white" />
                 </TouchableOpacity>
             </View>
-        </Modal>
 
-        <Modal isVisible={isDetailModalVisible} onBackdropPress={() => setDetailModalVisible(false)} onBackButtonPress={() => setDetailModalVisible(false)} style={styles.modal}>
-            <View style={styles.modalContent}>
-                <Text style={styles.formTitle}>Password Details</Text>
-                {selectedEntry && (
-                    <>
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Site:</Text>
-                            <Text style={[styles.detailValue, { marginLeft: 4 }]}>{selectedEntry.site_name}</Text>
+            <View style={styles.searchBar}>
+                <Ionicons name="search" size={18} color="#9CA3AF" style={styles.searchIcon} />
+                <TextInput style={styles.searchInput} placeholder="Search Password" placeholderTextColor="#888" value={searchQuery} onChangeText={setSearchQuery}/>
+            </View>
+            
+            {/* Password Details Modal */}
+            <Modal isVisible={isModalVisible} onBackdropPress={toggleModal} onBackButtonPress={toggleModal} swipeDirection="down" onSwipeComplete={toggleModal} style={styles.modal}>
+                <View style={styles.modalContent}>
+                    <Text style={styles.formTitle}>Add New Password</Text>
+                    <TextInput placeholder="Site Name" placeholderTextColor="#ccc" value={newEntryData.site_name} onChangeText={(text) => setNewEntryData({ ...newEntryData, site_name: text })} style={styles.input} autoCapitalize="none"/>
+                    <DomainSelector selected={newEntryData.domain_extension} onSelect={(value: any) => setNewEntryData({ ...newEntryData, domain_extension: value })}/>
+                    <TextInput placeholder="Email" placeholderTextColor="#ccc" value={newEntryData.email} onChangeText={(text) => setNewEntryData({ ...newEntryData, email: text })} style={styles.input} autoCapitalize="none"/>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 10, }}>
+                        <View style={{ flex: 1, position: 'relative' }}>
+                            <TextInput placeholder="Password" placeholderTextColor="#ccc" value={newEntryData.password} onChangeText={(text) => setNewEntryData({ ...newEntryData, password: text })} style={[styles.input, { flex: 1, marginBottom: 0, paddingRight: 40 }]} secureTextEntry={!showPassword} autoCapitalize="none"/>
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 10, top: '50%', transform: [{ translateY: -12 }], }}>
+                                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={24} color="#7C3AED" />
+                            </TouchableOpacity>
                         </View>
-                            
-                        <View style={styles.detailRow}>
-                            <Text style={[styles.detailLabel, { marginRight: 6, marginTop: 0 }]}>Email:</Text>
-                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                            
-                            {editMode === 'email' ? (
-                                <TextInput value={editedEmail} onChangeText={setEditedEmail} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
-                            ) : (
-                                <Text style={[styles.detailValue, { flex: 1, marginBottom: 5, }]} numberOfLines={1} ellipsizeMode="tail">
-                                    {selectedEntry.email}
-                                </Text>
-                            )}
-                                {/* Update Email Button */}
-                                <TouchableOpacity style={styles.editBtn} onPress={() => { if (editMode === 'email') {handleSave();} else { setEditMode('email'); setEditedEmail(selectedEntry.email); }}}>
-                                    <Ionicons name={editMode === 'email' ? 'checkmark' : 'create-outline'} size={20} color="#7C3AED" />
-                                </TouchableOpacity>
+                        <TouchableOpacity onPress={generatePasswordFromAPI} style={{ paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#E7C6FF', marginLeft: 8, borderRadius: 999, }}>
+                            <Text style={{ color: '#7C3AED', fontWeight: 'bold', }}>Generate</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <TextInput placeholder="Notes (optional)" placeholderTextColor="#ccc" value={newEntryData.notes} onChangeText={(text) => setNewEntryData({ ...newEntryData, notes: text })} style={styles.input} />
+                    <TouchableOpacity onPress={handleAddPassword} style={styles.addButton}>
+                        <Text style={{ color: '#7C3AED', fontWeight: 'bold' }}>Add Password</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
+
+            <Modal isVisible={isDetailModalVisible} onBackdropPress={() => setDetailModalVisible(false)} onBackButtonPress={() => setDetailModalVisible(false)} style={{ margin: 0 }}>
+                
+                <View style={styles.fullScreenModal}>
+                    
+                    {/* Entries */}
+                    {selectedEntry && (
+                        <>
+                            <View style={{ alignItems: 'center', marginBottom: 30 }}>
+                                <Text style={{ fontSize: 20, fontWeight: '600', marginTop: 10, marginBottom: 20 }}>{selectedEntry.site_name}</Text>
+                                <Image source={{ uri: selectedEntry.logo_url }} style={{ width: 50, height: 50, borderRadius: 6 }} />
                             </View>
-                        </View>
+                            <View style={styles.detailRow}>
+                                <Text style={styles.detailLabel}>Site:</Text>
+                                <Text style={[styles.detailValue, { marginLeft: 4 }]}>{selectedEntry.site_name}</Text>
+                            </View>
+                                
+                            <View style={styles.detailRow}>
+                                <Text style={[styles.detailLabel, { marginRight: 6, marginTop: 0 }]}>Email:</Text>
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                
+                                {editMode === 'email' ? (
+                                    <TextInput value={editedEmail} onChangeText={setEditedEmail} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]} autoCapitalize="none"/>
+                                ) : (
+                                    <Text style={[styles.detailValue, { flex: 1, marginBottom: 5, }]} numberOfLines={1} ellipsizeMode="tail">
+                                        {selectedEntry.email}
+                                    </Text>
+                                )}
+                                    {/* Update Email Button */}
+                                    <TouchableOpacity style={styles.editBtn} onPress={() => { if (editMode === 'email') {handleSave();} else { setEditMode('email'); setEditedEmail(selectedEntry.email); }}}>
+                                        <Ionicons name={editMode === 'email' ? 'checkmark' : 'create-outline'} size={20} color="#7C3AED" />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
 
-                        <View style={[styles.detailRow, { alignItems: 'center' }]}>
-                            <Text style={styles.detailLabel}>Password:</Text>
-                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                            <View style={[styles.detailRow, { alignItems: 'center' }]}>
+                                <Text style={styles.detailLabel}>Password:</Text>
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
 
-                                {editMode === 'password' ? (
-                                    <>
-                                        <TextInput value={editedPassword} onChangeText={setEditedPassword} secureTextEntry={!showPassword} style={[styles.detailValue, { marginLeft: 3, marginRight: 5, flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]}/>
+                                    {editMode === 'password' ? (
+                                        <>
+                                            <TextInput value={editedPassword} onChangeText={setEditedPassword} secureTextEntry={!showPassword} style={[styles.detailValue, { marginLeft: 3, marginRight: 5, flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 5, }]} autoCapitalize="none"/>
+                                            
+                                            {/* Show Password Button */}
+                                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
+                                            </TouchableOpacity>
+
+                                            {/* Copy Password Button */}
+                                            <TouchableOpacity onPress={async () => { await Clipboard.setStringAsync(selectedEntry.password); setCopied(true); setTimeout(() => setCopied(false), 1500);}} style={styles.copyBtn}>
+                                                <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color="#7C3AED" />
+                                            </TouchableOpacity>
                                         
-                                        {/* Show Password Button */}
-                                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                                            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
-                                        </TouchableOpacity>
 
-                                        {/* Copy Password Button */}
-                                        <TouchableOpacity onPress={async () => { await Clipboard.setStringAsync(selectedEntry.password); setCopied(true); setTimeout(() => setCopied(false), 1500);}} style={styles.copyBtn}>
-                                            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color="#7C3AED" />
-                                        </TouchableOpacity>
-                                    
+                                            {/* Update Password Button */}
+                                            <TouchableOpacity style={styles.editBtn} onPress={() => {
+                                                if (editMode === 'password') handleSave();
+                                                else {
+                                                    setEditMode('password');
+                                                    setEditedPassword(selectedEntry.password);
+                                                }
+                                            }}>
+                                                <Ionicons name="checkmark" size={20} color="#7C3AED" />
+                                            </TouchableOpacity>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Text style={[styles.detailValue, { flex: 1, marginLeft: 4, marginBottom: 2, }]} numberOfLines={1}>
+                                                {showPassword ? selectedEntry.password : '••••••••'}
+                                            </Text>
+                                            {/* Show Password Button */}
+                                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                                                <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
+                                            </TouchableOpacity>
+                                            {/* Copy Password Button */}
+                                            <TouchableOpacity onPress={async () => { await Clipboard.setStringAsync(selectedEntry.password); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={styles.copyBtn}>
+                                                <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color="#7C3AED" />
+                                            </TouchableOpacity>
 
-                                        {/* Update Password Button */}
-                                        <TouchableOpacity style={styles.editBtn} onPress={() => {
-                                            if (editMode === 'password') handleSave();
-                                            else {
+                                            {/* Update Password Button */}
+                                            <TouchableOpacity style={styles.editBtn} onPress={() => {
                                                 setEditMode('password');
                                                 setEditedPassword(selectedEntry.password);
-                                            }
-                                        }}>
+                                            }}>
+                                                <Ionicons name="create-outline" size={20} color="#7C3AED" />
+                                            </TouchableOpacity>
+                                        </>
+                                    )}
+                                </View>
+                            </View>
+
+                            <View style={styles.detailRow}>
+                                <Text style={styles.detailLabel}>Notes:</Text>
+                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+
+                                {editMode === 'notes' ? (
+                                    <>
+                                        <TextInput value={selectedEntry.notes || ''} onChangeText={(text) => selectedEntry && (selectedEntry.notes = text)} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 10, }]} multiline numberOfLines={4} placeholder="Enter your notes here..." placeholderTextColor="#aaa" autoCapitalize="none"/>
+                                        <TouchableOpacity style={styles.editBtn} onPress={() => handleSave()}>
                                             <Ionicons name="checkmark" size={20} color="#7C3AED" />
                                         </TouchableOpacity>
                                     </>
                                 ) : (
-                                    <>
-                                        <Text style={[styles.detailValue, { flex: 1, marginLeft: 4, marginBottom: 2, }]} numberOfLines={1}>
-                                            {showPassword ? selectedEntry.password : '••••••••'}
+                                    <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                                        <Text style={[styles.detailValue, { flex: 1, marginBottom: 2, marginLeft: 2, }]} numberOfLines={4}>
+                                            {selectedEntry.notes || 'None'}
                                         </Text>
-                                        {/* Show Password Button */}
-                                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
-                                            <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color="#7C3AED" />
-                                        </TouchableOpacity>
-                                        {/* Copy Password Button */}
-                                        <TouchableOpacity onPress={async () => { await Clipboard.setStringAsync(selectedEntry.password); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={styles.copyBtn}>
-                                            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color="#7C3AED" />
-                                        </TouchableOpacity>
-
-                                        {/* Update Password Button */}
                                         <TouchableOpacity style={styles.editBtn} onPress={() => {
-                                            setEditMode('password');
-                                            setEditedPassword(selectedEntry.password);
+                                            setEditMode('notes');
                                         }}>
                                             <Ionicons name="create-outline" size={20} color="#7C3AED" />
                                         </TouchableOpacity>
-                                    </>
+                                    </View>
                                 )}
-                            </View>
-                        </View>
-
-                        <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Notes:</Text>
-                            <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-
-                            {editMode === 'notes' ? (
-                                <>
-                                    <TextInput value={selectedEntry.notes || ''} onChangeText={(text) => selectedEntry && (selectedEntry.notes = text)} style={[styles.detailValue, { flex: 1, borderBottomWidth: 1, borderColor: '#ccc', marginBottom: 10, }]} multiline numberOfLines={4} placeholder="Enter your notes here..." placeholderTextColor="#aaa"/>
-                                    <TouchableOpacity style={styles.editBtn} onPress={() => handleSave()}>
-                                        <Ionicons name="checkmark" size={20} color="#7C3AED" />
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={[styles.detailValue, { flex: 1, marginBottom: 2, marginLeft: 2, }]} numberOfLines={4}>
-                                        {selectedEntry.notes || 'None'}
-                                    </Text>
-                                    <TouchableOpacity style={styles.editBtn} onPress={() => {
-                                        setEditMode('notes');
-                                    }}>
-                                        <Ionicons name="create-outline" size={20} color="#7C3AED" />
-                                    </TouchableOpacity>
                                 </View>
-                            )}
                             </View>
-                        </View>
 
-                    </>
-                )}
-                <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={[styles.addButton, {marginTop: 15}]}>
-                    <Text style={{ color: '#7C3AED', fontWeight: 'bold'  }}>Close</Text>
-                </TouchableOpacity>
-            </View>
-        </Modal>
-
-
-        <FlatList data={passwordEntries} keyExtractor={(item) => item.id.toString()} renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => { setSelectedEntry(item); setDetailModalVisible(true); setModalVisible(false); }}>
-                <View style={styles.entryContainer}>
-                    {item.logo_url ? (
-                        <View style={styles.logoContainer}>
-                            <Image source={{ uri: item.logo_url }} style={styles.logoImage} resizeMode="contain" />
-                        </View>
-                    ) : (
-                        <View style={styles.iconContainer}>
-                            <Ionicons name="folder" size={24} color="#7C3AED" />
-                        </View>
+                        </>
                     )}
-                    <View style={styles.textContainer}>
-                        <Text style={styles.siteName}>{item.site_name}</Text>
-                        <Text style={styles.email}>{item.email}</Text>
-                    </View>
+                    <TouchableOpacity onPress={() => setDetailModalVisible(false)} style={[styles.addButton, {marginTop: 15}]}>
+                        <Text style={{ color: '#7C3AED', fontWeight: 'bold'  }}>Close</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={confirmDelete} style={{ marginTop: 20, padding: 12, backgroundColor: 'red', borderRadius: 8, alignItems: 'center', }}>
+                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Delete Entry</Text>
+                    </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
-            )}
-            ListEmptyComponent={<Text style={{ color: 'white', textAlign: 'center', marginTop: 20 }}>No passwords yet. Tap the pencil to add one!</Text>}
-            contentContainerStyle={{ paddingBottom: 30 }}
-        />
-    </LinearGradient>    
-  );
+            </Modal>
+
+            <FlatList data={filteredEntries} keyExtractor={(item) => item.id.toString()} renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => { setSelectedEntry(item); setDetailModalVisible(true); setModalVisible(false); }}>
+                    <View style={styles.entryContainer}>
+                        {item.logo_url ? (
+                            <View style={styles.logoContainer}>
+                                <Image source={{ uri: item.logo_url }} style={styles.logoImage} resizeMode="contain" />
+                            </View>
+                        ) : (
+                            <View style={styles.iconContainer}>
+                                <Ionicons name="folder" size={24} color="#7C3AED" />
+                            </View>
+                        )}
+                        <View style={styles.textContainer}>
+                            <Text style={styles.siteName}>{item.site_name}</Text>
+                            <Text style={styles.email}>{item.email}</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+                )} ListEmptyComponent={<Text style={{ color: 'white', textAlign: 'center', marginTop: 20 }}>No passwords yet. Tap the plus icon to add one!</Text>} contentContainerStyle={{ paddingBottom: 30 }}/>
+        </LinearGradient>    
+    );
 };
 
 export default DashboardScreen;
@@ -528,5 +576,29 @@ const styles = StyleSheet.create({
         padding: 6,
         borderRadius: 6,
         backgroundColor: '#F3E8FF',
+    },
+    searchBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        marginBottom: 30,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        color: 'black',
+        paddingVertical: 8,
+    },  
+    fullScreenModal: {
+        flex: 1,
+        backgroundColor: 'white',
+        paddingTop: 60,
+        paddingHorizontal: 20,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
     },
 });

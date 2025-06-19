@@ -13,6 +13,7 @@ const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async () => {
     setErrorMessage('');
@@ -76,7 +77,10 @@ const SignupScreen = () => {
           <TextInput placeholder="First Name" placeholderTextColor="#d1d5db" style={styles.input} value={firstName} onChangeText={setFirstName}/>
           <TextInput placeholder="Last Name" placeholderTextColor="#d1d5db" style={styles.input} value={lastName} onChangeText={setLastName}/>
           <TextInput placeholder="Email address" placeholderTextColor="#d1d5db" style={styles.input} value={email} onChangeText={setEmail}/>
-          <TextInput placeholder="Password" placeholderTextColor="#d1d5db" secureTextEntry style={styles.input} value={password} onChangeText={setPassword}/>
+          <TextInput placeholder="Password" placeholderTextColor="#d1d5db" secureTextEntry={!showPassword} style={styles.input} value={password} onChangeText={setPassword}/>
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 10, top: '100%', transform: [{ translateY: -32 }], }}>
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={22} color="white" />
+          </TouchableOpacity>
         </View>
 
         {/* Error Message */}
